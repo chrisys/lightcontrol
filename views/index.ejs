@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <title><%= appname %></title>
+
+    <!-- Bootstrap -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+	<link href="css/bootstrap-switch.min.css" rel="stylesheet">
+	<link href="css/stjoslights.css" rel="stylesheet">
+
+	<link rel="shortcut icon" href="/images/favicon.ico" type="image/x-icon" />
+	<link rel="apple-touch-icon" sizes="57x57" href="/images/apple-touch-icon-57x57.png">
+	<link rel="apple-touch-icon" sizes="60x60" href="/images/apple-touch-icon-60x60.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="/images/apple-touch-icon-72x72.png">
+	<link rel="apple-touch-icon" sizes="76x76" href="/images/apple-touch-icon-76x76.png">
+	<link rel="apple-touch-icon" sizes="114x114" href="/images/apple-touch-icon-114x114.png">
+	<link rel="apple-touch-icon" sizes="120x120" href="/images/apple-touch-icon-120x120.png">
+	<link rel="apple-touch-icon" sizes="144x144" href="/images/apple-touch-icon-144x144.png">
+	<link rel="apple-touch-icon" sizes="152x152" href="/images/apple-touch-icon-152x152.png">
+	<link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-180x180.png">
+	<link rel="icon" type="image/png" href="/images/favicon-16x16.png" sizes="16x16">
+	<link rel="icon" type="image/png" href="/images/favicon-32x32.png" sizes="32x32">
+	<link rel="icon" type="image/png" href="/images/favicon-96x96.png" sizes="96x96">
+	<link rel="icon" type="image/png" href="/images/android-chrome-192x192.png" sizes="192x192">
+	<meta name="msapplication-square70x70logo" content="/images/smalltile.png" />
+	<meta name="msapplication-square150x150logo" content="/images/mediumtile.png" />
+	<meta name="msapplication-wide310x150logo" content="/images/widetile.png" />
+	<meta name="msapplication-square310x310logo" content="/images/largetile.png" />
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+  	<div class="container">
+  		<div class="page-header">
+    		<h1><%= appname %></h1>
+  			<p id="thetime"></p>
+  			<div class="alert alert-danger collapse" role="alert" id="other-user-warning"><span class="glyphicon glyphicon-warning-sign" aria-hidden="true"></span> <strong>Warning</strong> There <span id="other-connection-count">is 1 other person</span> currently connected to this system.</div>
+    		<div class="alert alert-warning collapse" role="alert" id="maintenance-warning"><span class="glyphicon glyphicon-warning-sign" aria-hidden="true"></span> <strong>Warning</strong> The system is currently in maintenance mode; switches will have no effect.</div>
+    	</div>
+
+    	<h3>All-weather Pitch</h3>
+    	<div class="row text-center">
+	        <div class="col-md-4">
+	        	<div class="panel panel-default">
+
+		            <div class="panel-heading">
+		              <h3 class="panel-title">Circuit 1 <span id="circuit_state_1" class="label label-default">OFF</span> <i class="stjl-stj_lights_c1"></i></h3>
+		            </div>
+		            <div class="panel-body ">
+		            	<input type="checkbox" data-circuit="1" class="circuit-switch" id="circuit_1" name="circuit_1" />
+		            </div>
+		            <div class="panel-footer">
+		            	<span id="panel_footer_1">&nbsp;</span>
+		            	<span id="panel_warning_footer_1">&nbsp;</span>
+		            </div>
+		        </div>
+	        </div>
+	        <div class="col-md-4">
+	        	<div class="panel panel-default">
+		            <div class="panel-heading">
+		              <h3 class="panel-title">Circuit 2 <span id="circuit_state_2" class="label label-default">OFF</span> <i class="stjl-stj_lights_c2"></i></h3>
+		            </div>
+		            <div class="panel-body">
+		              <input type="checkbox" data-circuit="2" class="circuit-switch" id="circuit_2" name="circuit_2" />
+		            </div>
+		            <div class="panel-footer">
+		            	<span id="panel_footer_2">&nbsp;</span>
+		            	<span id="panel_warning_footer_2">&nbsp;</span>
+		            </div>
+		        </div>
+	        </div>
+	        <div class="col-md-4">
+	        	<div class="panel panel-default">
+		            <div class="panel-heading">
+		              <h3 class="panel-title">Circuit 3 <span id="circuit_state_3" class="label label-default">OFF</span> <i class="stjl-stj_lights_c3"></i></h3>
+		            </div>
+		            <div class="panel-body">
+		              <input type="checkbox" data-circuit="3" class="circuit-switch" id="circuit_3" name="circuit_3" />
+		            </div>
+		            <div class="panel-footer">
+		            	<span id="panel_footer_3">&nbsp;</span>
+		            	<span id="panel_warning_footer_3">&nbsp;</span>
+		            </div>
+		        </div>
+	        </div>
+      	</div>
+
+    	<h3>Floodlights</h3>
+    	<div class="row text-center">
+	        <div class="col-md-4">
+	        	<div class="panel panel-default">
+		            <div class="panel-heading">
+		              <h3 class="panel-title">Cube <span id="circuit_state_4" class="label label-default">OFF</span></h3>
+		            </div>
+		            <div class="panel-body ">
+		            	<input type="checkbox" data-circuit="4" class="circuit-switch" id="circuit_4" name="circuit_4" />
+		            </div>
+		            <div class="panel-footer">
+		            	<span id="panel_footer_4">&nbsp;</span>
+		            	<span id="panel_warning_footer_4">&nbsp;</span>
+		            </div>
+		        </div>
+	        </div>
+          <div class="col-md-4">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                  <h3 class="panel-title">School <span id="circuit_state_5" class="label label-default">OFF</span></h3>
+                </div>
+                <div class="panel-body ">
+                  <input type="checkbox" data-circuit="5" class="circuit-switch" id="circuit_5" name="circuit_5" />
+                </div>
+                <div class="panel-footer">
+                  <span id="panel_footer_5">&nbsp;</span>
+                  <span id="panel_warning_footer_5">&nbsp;</span>
+                </div>
+            </div>
+          </div>
+      	</div>
+
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+	<script   src="https://code.jquery.com/jquery-1.12.4.min.js"   integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ="   crossorigin="anonymous"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="js/bootstrap.min.js"></script>
+	<script src="js/bootstrap-switch.min.js"></script>
+
+	<script src="/socket.io/socket.io.js"></script>
+	<script>
+		var serverTime = <%= timestamp %>;
+		var localTime = +Date.now();
+		var timeDiff = serverTime + 1000 - localTime;
+		date = new Date((+Date.now() + timeDiff));
+
+		setInterval(function () {
+			date.setTime((+Date.now() + timeDiff));
+		    $('#thetime').html(date.toLocaleTimeString());
+		}, 1000);
+
+		var socket = io.connect();
+		var updateCountTimeout;
+
+		socket.on('notify change', function(data) {
+			if(data.set != null)
+			{
+				$('#circuit_'+data.circuit).bootstrapSwitch('state', data.set, true);
+			}
+
+			if(data.status == true)
+			{
+				$('#circuit_state_'+data.circuit).removeClass('label-default').addClass('label-primary').html('<span class="glyphicon glyphicon-flash" aria-hidden="true"></span> ON <span class="glyphicon glyphicon-flash" aria-hidden="true"></span>');
+			} else if (data.status == false)
+			{
+				$('#circuit_state_'+data.circuit).removeClass('label-primary').addClass('label-default').html('OFF');
+			}
+		});
+
+		socket.on('notify message', function(data) {
+			if(data.message == 'STATUSERROR')
+			{
+				$('#panel_warning_footer_'+data.circuit).html('<span class="alert-danger"><span class="glyphicon glyphicon-danger" aria-hidden="true"></span> <strong>Warning:</strong> Switching failure, check system</span>');
+			} else {
+				$('#panel_warning_footer_'+data.circuit).html('&nbsp;');
+			}
+		});
+
+		socket.on('user connected', function(data) {
+			clearTimeout(updateCountTimeout);
+			updateCountTimeout = setTimeout(function() { updateCount(data.count); }, 1000);
+		});
+
+		socket.on('user disconnected', function(data) {
+			clearTimeout(updateCountTimeout);
+			updateCountTimeout = setTimeout(function() { updateCount(data.count); }, 1000);
+		});
+
+		socket.on('update times', function(data) {
+			if(data != null) {
+				if(data.sent == false && data.ts != null)
+				{
+					// this means the command was not sent to the relay
+					var d = new Date(data.ts * 1000);
+					var ds = d.toLocaleTimeString();
+
+					if(data.status == 1) {
+						$('#panel_footer_'+data.circuit).html('<span class="glyphicon glyphicon-time" aria-hidden="true"></span> Will turn on at ' + ds);
+					} else {
+						$('#panel_footer_'+data.circuit).html('<span class="glyphicon glyphicon-time" aria-hidden="true"></span> Will turn off at ' + ds);
+					}
+				} else if (data.ts == null)
+				{
+					// there wasn't anything to do for this circuit
+					$('#panel_footer_'+data.circuit).html('&nbsp;');
+				}
+			} else {
+				// <span class="glyphicon glyphicon-time" aria-hidden="true"></span>
+				$('#panel_footer_'+data.circuit).html('&nbsp;');
+			}
+		});
+
+		$('.circuit-switch').bootstrapSwitch();
+
+		$('.circuit-switch').on('switchChange.bootstrapSwitch', function(event, state) {
+
+			var thischeck = this;
+			var postdata = { circuit: $(this).data('circuit'), set: state, id: 'eyedeeee', key: 'keeeeey'};
+
+			socket.emit('switch change', postdata);
+		});
+
+		function updateCount(count) {
+			if(count==2)
+			{
+				$('#other-connection-count').html('is 1 other person');
+				$('#other-user-warning').collapse('show');
+
+			} else if (count > 2) {
+				$('#other-connection-count').html('are ' + (count-1) + ' other people');
+				$('#other-user-warning').collapse('show');
+
+			} else {
+				$('#other-user-warning').collapse('hide');
+			}
+		}
+
+	</script>
+  </body>
+</html>

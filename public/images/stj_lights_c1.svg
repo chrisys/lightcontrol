@@ -1,0 +1,13 @@
+<svg version="1.1" id="stj-lights" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" preserveAspectRatio="true">
+  <circle class="light-0" cx="50" cy="50" r="20" fill="#000000" />
+  <circle class="light-1" cx="100" cy="50" r="5" fill="#000000" />
+  <circle class="light-2" cx="150" cy="50" r="5" fill="#000000" />
+  <circle class="light-3" cx="200" cy="50" r="20" fill="#000000" />
+  <circle class="light-4" cx="250" cy="50" r="5" fill="#000000" />
+
+  <circle class="light-5" cx="50" cy="100" r="5" fill="#000000" />
+  <circle class="light-6" cx="100" cy="100" r="5" fill="#000000" />
+  <circle class="light-7" cx="150" cy="100" r="20" fill="#000000" />
+  <circle class="light-8" cx="200" cy="100" r="5" fill="#000000" />
+  <circle class="light-9" cx="250" cy="100" r="5" fill="#000000" />
+</svg>

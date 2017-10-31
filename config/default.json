@@ -1,0 +1,14 @@
+{
+  "database": {
+    "host": "0.0.0.0",
+    "user": "root",
+    "password": "rootpw",
+    "database": "lightcontrol",
+    "connectionLimit": 10
+  },
+  "app": {
+    "name": "Lighting controller",
+    "key": "devkey",
+    "redirect": "http://www.bbc.co.uk"
+  }
+}
