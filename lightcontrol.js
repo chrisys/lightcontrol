@@ -2,14 +2,18 @@ module.exports = {
 	dbconnection: require('./database'),
 	io: io,
 	schedule: require('node-schedule'),
+	config: require('config'),
 	suncalc: require('suncalc'),
-	suncalc_latitude: 50.643048,
-	suncalc_longitude: -4.367892,
+	suncalc_latitude: 0,
+	suncalc_longitude: 0,
 	jobs: [],
 
 	initialize: function() {
 		// this resets all the requests (used on server startup)
 		var _self = this;
+
+		_self.suncalc_latitude = _self.config.get('app').latitude;
+		_self.suncalc_longitude = _self.config.get('app').longitude;
 
 		_self.dbconnection.getConnection(function(err, connection) {
 			var query = connection.query('SELECT `id`,`ip`,`channel`,`current_status`,`current_requested_status` FROM `channels` WHERE 1');

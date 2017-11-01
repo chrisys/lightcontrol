@@ -9,6 +9,8 @@
   "app": {
     "name": "Lighting controller",
     "key": "devkey",
-    "redirect": "http://www.bbc.co.uk"
+    "redirect": "http://www.bbc.co.uk",
+    "latitude": "45.9247",
+    "longitude": "6.8728"
   }
 }
