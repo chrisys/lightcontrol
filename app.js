@@ -15,7 +15,10 @@ global.io = require('socket.io')(server);
 
 var ioevents = require('./ioevents')(io);
 
-
+if(ioevents==false) {
+  console.log('No DB connection');
+  process.exit();
+}
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));

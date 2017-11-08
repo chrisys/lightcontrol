@@ -16,6 +16,10 @@ module.exports = {
 		_self.suncalc_longitude = _self.config.get('app').longitude;
 
 		_self.dbconnection.getConnection(function(err, connection) {
+			if(err) {
+				return false;
+			}
+
 			var query = connection.query('SELECT `id`,`ip`,`channel`,`current_status`,`current_requested_status` FROM `channels` WHERE 1');
 
 			query

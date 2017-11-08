@@ -5,7 +5,9 @@ module.exports = function(io) {
 
 		// some startup stuff on lightcontrol
 		// check to make sure there are no outstanding requests...
-		lightcontrol.initialize();
+		if(!lightcontrol.initialize()) {
+			return false;
+		}
 
 		io.on('connection', function (socket) {
 			current_connections += 1;

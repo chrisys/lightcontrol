@@ -1,3 +1,6 @@
+CREATE DATABASE IF NOT EXISTS lightcontrol;
+USE lightcontrol;
+
 # Dump of table activity_log
 # ------------------------------------------------------------
 
