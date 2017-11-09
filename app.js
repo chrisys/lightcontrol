@@ -13,9 +13,9 @@ var app = express();
 var server = require('http').Server(app);
 global.io = require('socket.io')(server);
 
-var ioevents = require('./ioevents')(io);
+var ioevents = require('./ioevents');
 
-if(ioevents==false) {
+if(ioevents.init(io)===false) {
   console.log('No DB connection');
   process.exit();
 }
