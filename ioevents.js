@@ -13,6 +13,7 @@ module.exports = {
 			io.on('connection', function (socket) {
 				current_connections += 1;
 				io.emit('user connected', { count: current_connections });
+				io.emit('server time', { ts: Date.now() });
 
 				lightcontrol.load_state(1, socket);
 				lightcontrol.load_state(2, socket);
