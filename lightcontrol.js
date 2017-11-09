@@ -179,12 +179,19 @@ module.exports = {
 			console.log('check_and_action_single: jobs scheduled: '+_self.jobs.length);
 			for(i = _self.jobs.length - 1; i>=0; i--)
 			{
-				// only cancel the job if the current_status is the same as the job status
+				// we want to only cancel the job if the current_status is the same as the job status
+				// however this leads to the jobs building up if the status is not the same, need to also look at the ts
 				if(_self.jobs[i].circuit == item.id && _self.jobs[i].status == item.current_status)
 				{
-					console.log('check_and_action_single: cancelling job on channel '+item.id+' because '+item.current_status+' is '+_self.jobs[i].status);
-					_self.jobs[i].job.cancel();
-					_self.jobs.splice(i, 1);
+					if(_self.jobs[i].job != null)
+					{
+						console.log('check_and_action_single: cancelling job on channel '+item.id+' because '+item.current_status+' is '+_self.jobs[i].status);
+						_self.jobs[i].job.cancel();
+						_self.jobs.splice(i, 1);
+					} else {
+						_self.jobs.splice(i, 1);
+						console.log('check_and_action_single: not cancelling job on channel '+item.id+' because it has already gone!');
+					}
 				}
 			}
 
@@ -246,7 +253,7 @@ module.exports = {
 							}
 
 							// check to make sure the permissible_action_ts is in the past, if it is can action immediately, if not it will be later so return the time to the ui
-							if(permissible_action_ts < current_ts)
+							if(permissible_action_ts <= current_ts)
 							{
 								// doing it now
 								_self.do_it_now(item.id, item.ip, item.channel, true, item.minimum_on_time);
@@ -268,7 +275,7 @@ module.exports = {
 				permissible_action_ts = current_status_ts + item.minimum_on_time;
 
 				// there's only a stagger required on power on, not power off, so makes it simpler
-				if(permissible_action_ts < current_ts)
+				if(permissible_action_ts <= current_ts)
 				{
 					// do it now
 					_self.do_it_now(item.id, item.ip, item.channel, false, item.minimum_on_time);
@@ -366,25 +373,41 @@ module.exports = {
 	do_it_later: function(id, ip, channel, status, ts, minimum_on_time) {
 		var _self = this;
 
+		var found_existing_job = false;
 		// check to make sure we don't already have a job on this circuit
 		for(i = _self.jobs.length - 1; i>=0; i--)
 		{
 			// check the timestamp here to make sure we are not cancelling and readding the same thing
 			if(_self.jobs[i].circuit == id && _self.jobs[i].ts != ts)
 			{
-				console.log('do_it_later: cancelling job on channel '+id);
-				_self.jobs[i].job.cancel();
-				_self.jobs.splice(i, 1);
+				if(_self.jobs[i].job != null)
+				{
+					console.log('do_it_later: cancelling job on channel '+id);
+					_self.jobs[i].job.cancel();
+					_self.jobs.splice(i, 1);
+				} else {
+					_self.jobs.splice(i, 1);
+					console.log('do_it_later: not cancelling job on channel '+id+' - it has gone already!');
+				}
+			} else if(_self.jobs[i].job != null && _self.jobs[i].circuit == id && _self.jobs[i].ts == ts) {
+				found_existing_job = true;
 			}
 		}
 
-		var d = new Date(ts * 1000);
-		var job = _self.schedule.scheduleJob(d, function(fid, fip, fchannel, fstatus, fminimum_on_time) {
-			_self.do_it_now(fid, fip, fchannel, fstatus, fminimum_on_time);
-			_self.io.emit('update times', { circuit: fid, status: fstatus, ts: null, sent: true });
-		}.bind(null, id, ip, channel, status, minimum_on_time));
+		if(found_existing_job===false)
+		{
+			var d = new Date(ts * 1000);
+			var job = _self.schedule.scheduleJob(d, function(fid, fip, fchannel, fstatus, fminimum_on_time) {
+				_self.do_it_now(fid, fip, fchannel, fstatus, fminimum_on_time);
+				_self.io.emit('update times', { circuit: fid, status: fstatus, ts: null, sent: true });
+			}.bind(null, id, ip, channel, status, minimum_on_time));
 
-		_self.jobs.push({ circuit: id, job: job, status: status, ts: ts });
+			console.log('do_it_later: submitting job for circuit '+id+' ('+status+' '+ts+')');
+			_self.jobs.push({ circuit: id, job: job, status: status, ts: ts });
+		} else {
+			// todo this is skipping when something already exists but not the full job task
+			console.log('do_it_later: skipping duplicate job for circuit '+id+' ('+status+' '+ts+')');
+		}
 	},
 
 	check_prohibited: function(id, ip, channel, status, minimum_on_time) {
