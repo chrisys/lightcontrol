@@ -47,7 +47,7 @@ module.exports = {
 
 			})
 			.on('end', function() {
-				connection.release();
+				connection.destroy();
 				_self.check_and_action();
 			});
 		});
@@ -64,7 +64,7 @@ module.exports = {
 				} else {
 					console.log('set_status: channel ' + channel + ' state changed to ' + state);
 				}
-				connection.release();
+				connection.destroy();
 			});
 		});
 	},
@@ -80,7 +80,7 @@ module.exports = {
 				} else {
 					console.log('set_connectivity: channel ' + channel + ' connectivity changed to ' + connectivity);
 				}
-				connection.release();
+				connection.destroy();
 			});
 		});
 	},
@@ -99,46 +99,53 @@ module.exports = {
 					// once the state has been changed, call the check and action to work out if they need to be applied now
 					_self.check_and_action();
 				}
-				connection.release();
+				connection.destroy();
 			});
 		});
 	},
 
 	load_state: function(channel, socket) {
 		var _self = this;
+		console.log('load_state: loading state for channel ' + channel);
 
 		_self.dbconnection.getConnection(function(err, connection) {
 			connection.query('SELECT `current_requested_status`,`current_status` FROM `channels` WHERE `id` = ' + channel + ';', function (err, rows) {
 				if(err) {
 					console.error('load_state: could not load state for channel ' + channel);
 				} else {
-					console.log('load_state: requested state for channel ' + channel + ' loaded (' + rows[0].current_requested_status + ')');
-					console.log('load_state: state for channel ' + channel + ' loaded (' + rows[0].current_status + ')');
-
-					socket.emit('notify change', { circuit: channel, set: rows[0].current_requested_status, status: rows[0].current_status });
-
-					// check the jobs...
-					var job_for_this_chan = false;
-
-					var current_ts = Math.round(new Date().getTime()/1000.0);
-					for(i = _self.jobs.length - 1; i>=0; i--)
+					if(rows.length == 1)
 					{
-						if(_self.jobs[i].circuit == channel)
+						console.log('load_state: requested state for channel ' + channel + ' loaded (' + rows[0].current_requested_status + ')');
+						console.log('load_state: state for channel ' + channel + ' loaded (' + rows[0].current_status + ')');
+
+						socket.emit('notify change', { circuit: channel, set: rows[0].current_requested_status, status: rows[0].current_status });
+
+						// check the jobs...
+						var job_for_this_chan = false;
+
+						var current_ts = Math.round(new Date().getTime()/1000.0);
+						for(i = _self.jobs.length - 1; i>=0; i--)
 						{
-							if(current_ts < _self.jobs[i].ts)
+							if(_self.jobs[i].circuit == channel)
 							{
-								job_for_this_chan = true;
-								_self.io.emit('update times', { circuit:_self.jobs[i].circuit, status: _self.jobs[i].status, ts: _self.jobs[i].ts, sent: false });
+								if(current_ts < _self.jobs[i].ts)
+								{
+									job_for_this_chan = true;
+									_self.io.emit('update times', { circuit:_self.jobs[i].circuit, status: _self.jobs[i].status, ts: _self.jobs[i].ts, sent: false });
+								}
 							}
 						}
-					}
 
-					if(job_for_this_chan==false)
-					{
-						_self.io.emit('update times', { circuit: channel, status: null, ts: null, sent: false });
+						if(job_for_this_chan==false)
+						{
+							_self.io.emit('update times', { circuit: channel, status: null, ts: null, sent: false });
+						}
+					} else {
+						// this is query ok but no rows
+						console.error('load_state: could not load state for channel ' + channel);
 					}
 				}
-				connection.release();
+				connection.destroy();
 			});
 		});
 	},
@@ -157,7 +164,7 @@ module.exports = {
 				_self.check_and_action_single(row);
 			})
 			.on('end', function() {
-				connection.release();
+				connection.destroy();
 			});
 		});
 	},
@@ -172,9 +179,10 @@ module.exports = {
 			console.log('check_and_action_single: jobs scheduled: '+_self.jobs.length);
 			for(i = _self.jobs.length - 1; i>=0; i--)
 			{
-				if(_self.jobs[i].circuit == item.id)
+				// only cancel the job if the current_status is the same as the job status
+				if(_self.jobs[i].circuit == item.id && _self.jobs[i].status == item.current_status)
 				{
-					console.log('check_and_action_single: cancelling job on channel '+item.id);
+					console.log('check_and_action_single: cancelling job on channel '+item.id+' because '+item.current_status+' is '+_self.jobs[i].status);
 					_self.jobs[i].job.cancel();
 					_self.jobs.splice(i, 1);
 				}
@@ -205,7 +213,7 @@ module.exports = {
 				// then need to check to make sure that others in the same poweron group have not been switched on recently...
 				_self.dbconnection.getConnection(function(err, connection) {
 					connection.query('SELECT `id`,`current_status`,`current_status_timestamp` FROM `channels` WHERE `power_on_group` = ' + item.power_on_group + ' AND `id` <> ' + item.id, function(err, rows) {
-						connection.release();
+						connection.destroy();
 						if(err) {
 							console.error('check_and_action_single: could not load power_on_groups for channel ' + item.id);
 						} else {
@@ -315,12 +323,12 @@ module.exports = {
 						_self.io.emit('notify change', { circuit: id, set: row.current_status, status: row.current_status });
 						_self.io.emit('notify message', { circuit: id, message: 'STATUSERROR'});
 					}).on('end', function() {
-						connection.release();
+						connection.destroy();
 					});
 				}
 
 				connection.query('INSERT INTO `activity_log` SET ?;' , { timestamp: new Date(), channel_id: id, status: status, board_response: parsed_response.success }, function(err) {
-					connection.release();
+					connection.destroy();
 				});
 
 				// as the thing has changed state, run another check on scheduled...
@@ -342,7 +350,7 @@ module.exports = {
 					_self.io.emit('notify change', { circuit: id, set: row.current_status, status: row.current_status });
 					_self.io.emit('notify message', { circuit: id, message: 'STATUSERROR'});
 				}).on('end', function() {
-					connection.release();
+					connection.destroy();
 				});
 
 				// if this command failed, we do not know the state of the board
@@ -361,7 +369,8 @@ module.exports = {
 		// check to make sure we don't already have a job on this circuit
 		for(i = _self.jobs.length - 1; i>=0; i--)
 		{
-			if(_self.jobs[i].circuit == id)
+			// check the timestamp here to make sure we are not cancelling and readding the same thing
+			if(_self.jobs[i].circuit == id && _self.jobs[i].ts != ts)
 			{
 				console.log('do_it_later: cancelling job on channel '+id);
 				_self.jobs[i].job.cancel();
@@ -443,31 +452,33 @@ module.exports = {
 
 				})
 				.on('end', function() {
-					connection.release();
+					connection.destroy();
 				});
 
 			});
 		} else {
 			// currently off anyway so nobody cares
-			_self.io.emit('update times', { circuit: id, status: status, ts: null, sent: false });
+			console.log('check_prohibited: nobody cares');
+			// remove below for now as it's incorrectly blanking on jobs
+			// _self.io.emit('update times', { circuit: id, status: status, ts: null, sent: false });
 		}
 	},
 
 	check_scheduled: function(id) {
 		var _self = this;
 
-		console.log('check_scheduled: checking scheduled for: '+id);
+		// console.log('check_scheduled: checking scheduled for: '+id);
 		var now_ts = new Date().getTime()/1000;
 		now_ts = Math.floor(now_ts);
-		console.log('check_scheduled: now ts '+now_ts);
-		var earliest_event = { id: id, ip: null, channel: null, ts: null, action: null, minimum_on_time: null };
+		// console.log('check_scheduled: now ts '+now_ts);
+		var earliest_event = { id: id, current_status: null, ip: null, channel: null, ts: null, action: null, minimum_on_time: null };
 
 		// need to load any rows in the scheduled_events table for this id
 		// then need to work out if any are applicable now
 		// if they are then check to make sure there isn't one already in the queue for this event
 		// if this particular event is in the queue then do nothing, otherwise put it in
 		_self.dbconnection.getConnection(function(err, connection) {
-			var query = connection.query('SELECT `ip`,`channel`,`timestamp`,`event`,`special_timestamp`,`minimum_on_time` FROM `scheduled_events` LEFT JOIN `channels` ON `channels`.`id` = `scheduled_events`.`channel_id` WHERE `scheduled_events`.`channel_id` = ' + id + ';');
+			var query = connection.query('SELECT `ip`,`channel`,`timestamp`,`event`,`special_timestamp`,`minimum_on_time`,`current_status` FROM `scheduled_events` LEFT JOIN `channels` ON `channels`.`id` = `scheduled_events`.`channel_id` WHERE `scheduled_events`.`channel_id` = ' + id + ';');
 
 			query
 			.on('error', function(err) {
@@ -478,10 +489,11 @@ module.exports = {
 				earliest_event.ip = row['ip'];
 				earliest_event.channel = row['channel'];
 				earliest_event.minimum_on_time = row['minimum_on_time'];
+				earliest_event.current_status = row['current_status'];
 
 				if(row.special_timestamp != null)
 				{
-					console.log('check_scheduled: special juan');
+					// console.log('check_scheduled: special juan');
 					var special_timestamp_parts;
 					special_timestamp_parts = row.special_timestamp.split('#');
 
@@ -489,18 +501,18 @@ module.exports = {
 					var times_tomorrow = _self.suncalc.getTimes(new Date().strtotime('+1 day'), _self.suncalc_latitude, _self.suncalc_longitude);
 
 					// if the current time is after sunset, need to be sure to use tomorrow's sunrise rather than today
-					console.log('check_scheduled: calculated sunrise: '+times.sunrise.toTimeString());
-					console.log('check_scheduled: calculated sunset: '+times.sunset.toTimeString());
+					// console.log('check_scheduled: calculated sunrise: '+times.sunrise.toTimeString());
+					// console.log('check_scheduled: calculated sunset: '+times.sunset.toTimeString());
 
-					console.log('check_scheduled: calculated sunrise tomorrow: '+times_tomorrow.sunrise.toTimeString());
-					console.log('check_scheduled: calculated sunset tomorrow: '+times_tomorrow.sunset.toTimeString());
+					// console.log('check_scheduled: calculated sunrise tomorrow: '+times_tomorrow.sunrise.toTimeString());
+					// console.log('check_scheduled: calculated sunset tomorrow: '+times_tomorrow.sunset.toTimeString());
 
 					// with the specials we need to convert the data into the real timestamp before it can be used
 					if(special_timestamp_parts[0]=='sunrise')
 					{
-						console.log('check_scheduled: special sunrise '+special_timestamp_parts[1]);
+						// console.log('check_scheduled: special sunrise '+special_timestamp_parts[1]);
 						// the special timestamps are in the format: (sunrise|sunset)#(+|-)15 minutes
-						console.log('check_scheduled: calculated sunrise event ' + times.sunrise.strtotime(special_timestamp_parts[1]));
+						// console.log('check_scheduled: calculated sunrise event ' + times.sunrise.strtotime(special_timestamp_parts[1]));
 						event_ts = times.sunrise.strtotime(special_timestamp_parts[1]).getTime()/1000;
 						event_ts = Math.floor(event_ts);
 						tomorrow_event_ts = times_tomorrow.sunrise.strtotime(special_timestamp_parts[1]).getTime()/1000;
@@ -522,8 +534,8 @@ module.exports = {
 
 					} else if(special_timestamp_parts[0]=='sunset')
 					{
-						console.log('check_scheduled: special sunset '+special_timestamp_parts[1]);
-						console.log('check_scheduled: calculated sunset event ' + times.sunset.strtotime(special_timestamp_parts[1]));
+						// console.log('check_scheduled: special sunset '+special_timestamp_parts[1]);
+						// console.log('check_scheduled: calculated sunset event ' + times.sunset.strtotime(special_timestamp_parts[1]));
 						event_ts = times.sunset.strtotime(special_timestamp_parts[1]).getTime()/1000;
 						event_ts = Math.floor(event_ts);
 						tomorrow_event_ts = times_tomorrow.sunset.strtotime(special_timestamp_parts[1]).getTime()/1000;
@@ -576,15 +588,25 @@ module.exports = {
 			})
 			.on('end', function() {
 				console.log('check_scheduled: earliest event id ' + earliest_event.id + ' ip ' + earliest_event.ip + ' ch ' + earliest_event.channel + ' is ' + earliest_event.action + ' at ' + earliest_event.ts);
-				connection.release();
+				connection.destroy();
 
 				if(earliest_event.action == 'on')
 				{
-					_self.do_it_later(earliest_event.id, earliest_event.ip, earliest_event.channel, true, earliest_event.ts, earliest_event.minimum_on_time);
-					return _self.io.emit('update times', { circuit: earliest_event.id, status: 1, ts: earliest_event.ts, sent: false });
+					if(earliest_event.current_status == 1)
+					{
+						return _self.io.emit('update times', { circuit: earliest_event.id, status: null, ts: null, sent: false });
+					} else {
+						_self.do_it_later(earliest_event.id, earliest_event.ip, earliest_event.channel, true, earliest_event.ts, earliest_event.minimum_on_time);
+						return _self.io.emit('update times', { circuit: earliest_event.id, status: 1, ts: earliest_event.ts, sent: false });
+					}
 				} else if (earliest_event.action == 'off') {
-					_self.do_it_later(earliest_event.id, earliest_event.ip, earliest_event.channel, false, earliest_event.ts, earliest_event.minimum_on_time);
-					return _self.io.emit('update times', { circuit: earliest_event.id, status: 0, ts: earliest_event.ts, sent: false });
+					if(earliest_event.current_status == 0)
+					{
+						return _self.io.emit('update times', { circuit: earliest_event.id, status: null, ts: null, sent: false });
+					} else {
+						_self.do_it_later(earliest_event.id, earliest_event.ip, earliest_event.channel, false, earliest_event.ts, earliest_event.minimum_on_time);
+						return _self.io.emit('update times', { circuit: earliest_event.id, status: 0, ts: earliest_event.ts, sent: false });
+					}
 				}
 
 			});
